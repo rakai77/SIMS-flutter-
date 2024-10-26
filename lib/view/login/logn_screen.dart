@@ -1,7 +1,69 @@
 import 'package:flutter/material.dart';
+import '../../network/ApiClient.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _apiClient = ApiClient();
+  bool _isLoading = false;
+
+  Future<void> _login() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await _apiClient.login(
+        _emailController.text,
+        _passwordController.text,
+      );
+      // Assuming a successful response contains a token, navigate to HomeScreen
+      if (response.statusCode == 200) {
+        _showSuccessSnackBar("Login berhasil!");
+        Navigator.pushNamed(context, '/home');
+      }
+    } catch (e) {
+      setState(() {
+        _showErrorSnackBar(e.toString());
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.red,
+      behavior: SnackBarBehavior.floating,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  void _showSuccessSnackBar(String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.green,
+      behavior: SnackBarBehavior.floating,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +112,7 @@ class LoginScreen extends StatelessWidget {
             const SizedBox(height: 40),
             // Email TextField
             TextField(
+              controller: _emailController,
               decoration: InputDecoration(
                 hintText: 'masukan email anda',
                 prefixIcon: Icon(Icons.email_outlined),
@@ -61,11 +124,12 @@ class LoginScreen extends StatelessWidget {
             const SizedBox(height: 20),
             // Password TextField
             TextField(
+              controller: _passwordController,
               obscureText: true,
               decoration: InputDecoration(
                 hintText: 'masukan password anda',
-                prefixIcon: Icon(Icons.lock_outline),
-                suffixIcon: Icon(Icons.visibility_outlined),
+                prefixIcon: const Icon(Icons.lock_outline),
+                suffixIcon: const Icon(Icons.visibility_outlined),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -74,9 +138,7 @@ class LoginScreen extends StatelessWidget {
             const SizedBox(height: 30),
             // Login Button
             ElevatedButton(
-              onPressed: () {
-                // handle login
-              },
+              onPressed: _isLoading ? null : _login,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -84,7 +146,11 @@ class LoginScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text(
+              child: _isLoading
+                  ? const CircularProgressIndicator(
+                color: Colors.white,
+              )
+                  : const Text(
                 'Masuk',
                 style: TextStyle(
                   fontSize: 16,
