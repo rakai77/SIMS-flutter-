@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/banner_model.dart';
+import '../../data/service_model.dart';
 import '../../network/api_service.dart';
 import '../profile/profile_screen.dart';
 import '../topup/topup_screen.dart';
@@ -18,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? _profileData;
   List<BannerModel> _banners = [];
   int _balance = 0;
+  List<ServiceModel> _services = [];
 
   @override
   void initState() {
@@ -25,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _fetchProfile();
     _fetchBanners();
     _fetchBalance();
+    _fetchServices();
   }
 
   Future<void> _fetchProfile() async {
@@ -66,6 +69,19 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _fetchServices() async {
+    try {
+      final response = await _apiService.getServices();
+      if (response.statusCode == 200 && response.data['status'] == 0) {
+        setState(() {
+          _services = ServiceModel.fromJsonList(response.data['data']);
+        });
+      }
+    } catch (e) {
+      print("Error fetching services: $e");
+    }
+  }
+
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
@@ -76,11 +92,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final List<Widget> screens = [
       HomeContent(
-        firstName: _profileData?['first_name'] ?? 'User',
-        lastName: _profileData?['last_name'] ?? '',
-        banners: _banners,
-        balance: _balance,
-      ),
+          firstName: _profileData?['first_name'] ?? 'User',
+          lastName: _profileData?['last_name'] ?? '',
+          banners: _banners,
+          balance: _balance,
+          services: _services),
       const TopUpScreen(),
       const TransactionScreen(),
       const ProfileScreen(),
@@ -140,13 +156,15 @@ class HomeContent extends StatelessWidget {
   final String lastName;
   final List<BannerModel> banners;
   final int balance;
+  final List<ServiceModel> services;
 
   const HomeContent(
       {super.key,
       required this.firstName,
       required this.lastName,
       required this.banners,
-      required this.balance});
+      required this.balance,
+      required this.services});
 
   @override
   Widget build(BuildContext context) {
@@ -163,26 +181,23 @@ class HomeContent extends StatelessWidget {
           BalanceCard(balance: balance),
           const SizedBox(height: 20),
 
-          // Icons Grid
-          GridView.count(
-            crossAxisCount: 4,
+          GridView.builder(
+            padding: const EdgeInsets.all(8.0),
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(8.0),
-            children: const [
-              HomeIcon(Icons.home, 'PBB'),
-              HomeIcon(Icons.flash_on, 'Listrik'),
-              HomeIcon(Icons.phone, 'Pulsa'),
-              HomeIcon(Icons.water_damage, 'PDAM'),
-              HomeIcon(Icons.fireplace, 'PGN'),
-              HomeIcon(Icons.tv, 'Televisi'),
-              HomeIcon(Icons.music_note, 'Musik'),
-              HomeIcon(Icons.videogame_asset, 'Game'),
-              HomeIcon(Icons.fastfood, 'Makanan'),
-              HomeIcon(Icons.nights_stay, 'Kurban'),
-              HomeIcon(Icons.emoji_nature, 'Zakat'),
-              HomeIcon(Icons.data_usage, 'Data'),
-            ],
+            itemCount: services.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+            ),
+            itemBuilder: (context, index) {
+              final service = services[index];
+              return HomeIcon(
+                iconUrl: service.serviceIcon,
+                label: service.serviceName,
+              );
+            },
           ),
           const SizedBox(height: 20),
 
@@ -281,10 +296,10 @@ class _BalanceCardState extends State<BalanceCard> {
 }
 
 class HomeIcon extends StatelessWidget {
-  final IconData icon;
+  final String iconUrl;
   final String label;
 
-  const HomeIcon(this.icon, this.label, {super.key});
+  const HomeIcon({super.key, required this.iconUrl, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -293,10 +308,15 @@ class HomeIcon extends StatelessWidget {
       children: [
         CircleAvatar(
           backgroundColor: Colors.grey[200],
-          child: Icon(icon, color: Colors.black),
+          backgroundImage: NetworkImage(iconUrl),
+          radius: 24,
         ),
         const SizedBox(height: 6),
-        Text(label, style: const TextStyle(fontSize: 12)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12),
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }

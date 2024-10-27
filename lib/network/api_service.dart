@@ -50,4 +50,8 @@ class ApiService {
   Future<Response> getBalance() async {
     return await _dio.get('/balance');
   }
+
+  Future<Response> getServices() async {
+    return await _dio.get('/services'); // Ensure this matches the actual endpoint
+  }
 }

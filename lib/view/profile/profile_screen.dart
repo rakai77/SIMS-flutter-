@@ -1,7 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import '../../network/api_service.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final ApiService _apiService = ApiService();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+
+  String? profileImageUrl;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    try {
+      final response = await _apiService.getProfile();
+      if (response.statusCode == 200 && response.data['status'] == 0) {
+        final profileData = response.data['data'];
+        setState(() {
+          emailController.text = profileData['email'] ?? '';
+          firstNameController.text = profileData['first_name'] ?? '';
+          lastNameController.text = profileData['last_name'] ?? '';
+          profileImageUrl = profileData['profile_image'] ?? '';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      print("Error fetching profile: $e");
+    }
+  }
+
+  // Logout method to clear session and navigate to login screen
+  Future<void> _logout() async {
+    final box = Hive.box('authBox');
+    await box.delete('token'); // Clear the saved token or session data
+
+    // Navigate to the login screen and remove previous routes
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    firstNameController.dispose();
+    lastNameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10,106 +69,47 @@ class ProfileScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Akun',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.black),
         ),
-        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Profile Picture and Edit Icon
-            const Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                CircleAvatar(
-                  radius: 60,
-                  backgroundImage: NetworkImage(
-                    'https://example.com/profile.jpg', // Replace with actual profile picture URL
-                  ),
-                ),
-                Positioned(
-                  right: 4,
-                  bottom: 4,
-                  child: CircleAvatar(
-                    radius: 16,
-                    backgroundColor: Colors.white,
-                    child: Icon(
-                      Icons.edit,
-                      color: Colors.black,
-                      size: 16,
-                    ),
-                  ),
-                ),
-              ],
+            CircleAvatar(
+              radius: 50,
+              backgroundImage: profileImageUrl != null && profileImageUrl!.isNotEmpty
+                  ? NetworkImage(profileImageUrl!)
+                  : const AssetImage('assets/placeholder.png') as ImageProvider,
             ),
+            const SizedBox(height: 12),
+            Text(
+              '${firstNameController.text} ${lastNameController.text}',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+
+            // Email, First Name, Last Name Fields
+            _buildProfileField('Email', Icons.email_outlined, emailController),
             const SizedBox(height: 16),
-
-            // Username
-            const Text(
-              'Kristanto Wibowo',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Email Field
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Email',
-                hintText: 'wallet@nutech.com',
-                prefixIcon: const Icon(Icons.email_outlined),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
+            _buildProfileField('Nama Depan', Icons.person_outline, firstNameController),
             const SizedBox(height: 16),
+            _buildProfileField('Nama Belakang', Icons.person_outline, lastNameController),
+            const SizedBox(height: 30),
 
-            // First Name Field
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Nama Depan',
-                hintText: 'Kristanto',
-                prefixIcon: const Icon(Icons.person_outline),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Last Name Field
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Nama Belakang',
-                hintText: 'Wibowo',
-                prefixIcon: const Icon(Icons.person_outline),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // Save and Cancel Buttons
+            // Edit Profile Button
             SizedBox(
-              width: double.infinity, // Makes the buttons take the full width
+              width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // Handle save action
+                  // Navigate to Edit Profile Screen
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
@@ -119,27 +119,27 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
                 child: const Text(
-                  'Simpan',
+                  'Edit Profil',
                   style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
+
+            // Logout Button
             SizedBox(
-              width: double.infinity, // Makes the button take the full width
+              width: double.infinity,
               child: OutlinedButton(
-                onPressed: () {
-                  // Handle cancel action
-                },
+                onPressed: _logout,
                 style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.red),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  side: const BorderSide(color: Colors.red),
                 ),
                 child: const Text(
-                  'Batalkan',
+                  'Logout',
                   style: TextStyle(fontSize: 16, color: Colors.red),
                 ),
               ),
@@ -147,6 +147,25 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  // Helper widget to build profile fields
+  Widget _buildProfileField(String label, IconData icon, TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      readOnly: true,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        filled: true,
+        fillColor: Colors.grey[200],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+      ),
+      style: const TextStyle(fontSize: 16),
     );
   }
 }
