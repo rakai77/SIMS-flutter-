@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../data/banner_model.dart';
+import '../../network/api_service.dart';
 import '../profile/profile_screen.dart';
 import '../topup/topup_screen.dart';
 import '../transaction/transaction_screen.dart';
@@ -11,14 +13,45 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final ApiService _apiService = ApiService();
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeContent(), // Home content (main screen)
-    const TopUpScreen(), // Top Up screen
-    const TransactionScreen(), // Transaction screen
-    const ProfileScreen(), // Profile screen
-  ];
+  Map<String, dynamic>? _profileData;
+
+  List<BannerModel> _banners = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfile();
+    _fetchBanners();
+  }
+
+  Future<void> _fetchProfile() async {
+    try {
+      final response = await _apiService.getProfile();
+      if (response.statusCode == 200 && response.data['status'] == 0) {
+        setState(() {
+          _profileData = response.data['data'];
+        });
+      }
+    } catch (e) {
+      print("Error fetching profile: $e");
+    }
+  }
+
+  Future<void> _fetchBanners() async {
+    try {
+      final response = await _apiService.getBanners();
+      if (response.statusCode == 200 && response.data['status'] == 0) {
+        setState(() {
+          _banners = BannerModel.fromJsonList(response.data['data']);
+        });
+      }
+    } catch (e) {
+      print("Error fetching banners: $e");
+    }
+  }
 
   void _onTabTapped(int index) {
     setState(() {
@@ -28,16 +61,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> screens = [
+      HomeContent(
+        firstName: _profileData?['first_name'] ?? 'User',
+        lastName: _profileData?['last_name'] ?? '',
+          banners: _banners
+
+      ),
+      const TopUpScreen(),
+      const TransactionScreen(),
+      const ProfileScreen(),
+    ];
+
     return Scaffold(
-      appBar: _currentIndex ==
-              0 // Only show AppBar when _currentIndex is 0 (Home)
+      appBar: _currentIndex == 0
           ? AppBar(
               elevation: 0,
               automaticallyImplyLeading: false,
-              title: const Row(
+              title: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     'SIMS PPOB',
                     style: TextStyle(
                       color: Colors.black,
@@ -46,9 +90,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   CircleAvatar(
-                    backgroundImage:
-                        NetworkImage('https://example.com/user-profile.jpg'),
-                    // Replace with user's profile picture URL
+                    backgroundImage: NetworkImage(
+                      _profileData?['profile_image'] ??
+                          'https://example.com/user-profile.jpg', // Fallback image URL
+                    ),
                     radius: 20,
                   ),
                 ],
@@ -57,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
           : null,
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: screens,
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -77,8 +122,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+
 class HomeContent extends StatelessWidget {
-  const HomeContent({super.key});
+  final String firstName;
+  final String lastName;
+  final List<BannerModel> banners;
+
+  const HomeContent(
+      {super.key, required this.firstName, required this.lastName, required this.banners});
 
   @override
   Widget build(BuildContext context) {
@@ -87,10 +138,9 @@ class HomeContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Greeting and Balance Card
-          const Text(
-            'Selamat datang,\nKristanto Wibowo',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          Text(
+            'Selamat datang,\n$firstName $lastName',
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           const BalanceCard(),
@@ -117,7 +167,6 @@ class HomeContent extends StatelessWidget {
               HomeIcon(Icons.data_usage, 'Data'),
             ],
           ),
-
           const SizedBox(height: 20),
 
           // Promo Section
@@ -126,31 +175,19 @@ class HomeContent extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
-          const SingleChildScrollView(
+          SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: [
-                PromoCard(
-                  color: Colors.redAccent,
-                  title: 'Saldo Gratis!',
-                  description:
-                      'saldo SIMS PPOB gratis maksimal Rp25.000 untuk pengguna pertama',
-                ),
-                SizedBox(width: 10),
-                PromoCard(
-                  color: Colors.purpleAccent,
-                  title: 'Diskon listrik!',
-                  description:
-                      'diskon untuk setiap pembayaran listrik prabayar/pascabayar 10%',
-                ),
-                SizedBox(width: 10),
-                PromoCard(
-                  color: Colors.orangeAccent,
-                  title: 'Promo Spesial!',
-                  description:
-                      'dapatkan diskon 20% untuk pembayaran PDAM bulan ini.',
-                ),
-              ],
+              children: banners.map((banner) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: PromoCard(
+                    color: Colors.lightBlueAccent,
+                    title: banner.bannerName,
+                    description: banner.description,
+                  ),
+                );
+              }).toList(),
             ),
           ),
         ],
@@ -243,7 +280,7 @@ class PromoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200, // Set a fixed width for each promo card
+      width: 200,
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: color,
@@ -255,12 +292,18 @@ class PromoCard extends StatelessWidget {
           Text(
             title,
             style: const TextStyle(
-                color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             description,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+            ),
           ),
         ],
       ),
