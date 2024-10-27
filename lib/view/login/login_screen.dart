@@ -13,6 +13,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _apiClient = ApiClient();
   bool _isLoading = false;
+  bool _isPasswordVisible = false;
 
   Future<void> _login() async {
     setState(() {
@@ -115,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: _emailController,
               decoration: InputDecoration(
                 hintText: 'masukan email anda',
-                prefixIcon: Icon(Icons.email_outlined),
+                prefixIcon: const Icon(Icons.email_outlined),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -125,11 +126,18 @@ class _LoginScreenState extends State<LoginScreen> {
             // Password TextField
             TextField(
               controller: _passwordController,
-              obscureText: true,
+              obscureText: !_isPasswordVisible,
               decoration: InputDecoration(
                 hintText: 'masukan password anda',
                 prefixIcon: const Icon(Icons.lock_outline),
-                suffixIcon: const Icon(Icons.visibility_outlined),
+                suffixIcon: IconButton(
+                  icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),

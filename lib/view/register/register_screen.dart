@@ -15,6 +15,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _apiClient = ApiClient();
   bool _isLoading = false;
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   Future<void> _register() async {
     setState(() {
@@ -151,11 +153,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
             // Password TextField
             TextField(
               controller: _passwordController,
-              obscureText: true,
+              obscureText: !_isPasswordVisible,
               decoration: InputDecoration(
                 hintText: 'buat password',
                 prefixIcon: const Icon(Icons.lock_outline),
-                suffixIcon: const Icon(Icons.visibility_outlined),
+                suffixIcon: IconButton(
+                  icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -164,11 +173,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 20),
             // Confirm Password TextField
             TextField(
-              obscureText: true,
+              obscureText: !_isConfirmPasswordVisible,
               decoration: InputDecoration(
                 hintText: 'konfirmasi password',
                 prefixIcon: const Icon(Icons.lock_outline),
-                suffixIcon: const Icon(Icons.visibility_outlined),
+                suffixIcon: IconButton(
+                  icon: Icon(_isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                  onPressed: () {
+                    setState(() {
+                      _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                    });
+                  },
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sims/view/home/home_screen.dart';
-import 'package:sims/view/login/logn_screen.dart';
+import 'package:sims/view/login/login_screen.dart';
 import 'package:sims/view/profile/profile_screen.dart';
 import 'package:sims/view/register/register_screen.dart';
 import 'package:sims/view/topup/topup_screen.dart';

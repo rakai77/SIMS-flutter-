@@ -7,12 +7,21 @@ class ApiClient {
 
   ApiClient()
       : _dio = Dio(
-    BaseOptions(
-      baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 5), // Updated to Duration
-      receiveTimeout: const Duration(seconds: 3), // Updated to Duration
-    ),
-  );
+          BaseOptions(
+            baseUrl: baseUrl,
+            connectTimeout: const Duration(seconds: 5), // Updated to Duration
+            receiveTimeout: const Duration(seconds: 3), // Updated to Duration
+          ),
+        ) {
+    _dio.interceptors.add(LogInterceptor(
+      request: true,
+      requestBody: true,
+      responseBody: true,
+      responseHeader: false,
+      error: true,
+      logPrint: (object) => print(object), // Customize log output (optional)
+    ));
+  }
 
   // Login API call
   Future<Response> login(String email, String password) async {
