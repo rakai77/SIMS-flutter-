@@ -1,24 +1,92 @@
 import 'package:flutter/material.dart';
+import '../../network/ApiClient.dart';
 
-class RegisterScreen extends StatelessWidget {
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
+
+  @override
+  _RegisterScreenState createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  final _emailController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _apiClient = ApiClient();
+  bool _isLoading = false;
+
+  Future<void> _register() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await _apiClient.register(
+        _emailController.text,
+        _firstNameController.text,
+        _lastNameController.text,
+        _passwordController.text,
+      );
+
+      if (response.statusCode == 200) {
+        _showSuccessSnackbar("Register berhasil!");
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+    } catch (e) {
+      _showErrorSnackbar(e.toString());
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _showErrorSnackbar(String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.red,
+      behavior: SnackBarBehavior.floating,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  void _showSuccessSnackbar(String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.green,
+      behavior: SnackBarBehavior.floating,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const SizedBox(height: 60), // Add some space to center content better
             // Logo and Title
             Center(
-              child: Column(
+              child: Row(
                 children: [
                   Image.asset(
-                    'assets/logo.png', // replace with your logo asset
+                    'images/Logo.png', // replace with your logo asset
                     height: 40,
                   ),
                   const SizedBox(height: 10),
@@ -44,8 +112,9 @@ class RegisterScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 40),
-            // Form fields
+            // Email TextField
             TextField(
+              controller: _emailController,
               decoration: InputDecoration(
                 hintText: 'masukan email anda',
                 prefixIcon: const Icon(Icons.email_outlined),
@@ -55,7 +124,9 @@ class RegisterScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+            // First Name TextField
             TextField(
+              controller: _firstNameController,
               decoration: InputDecoration(
                 hintText: 'nama depan',
                 prefixIcon: const Icon(Icons.person_outline),
@@ -65,7 +136,9 @@ class RegisterScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+            // Last Name TextField
             TextField(
+              controller: _lastNameController,
               decoration: InputDecoration(
                 hintText: 'nama belakang',
                 prefixIcon: const Icon(Icons.person_outline),
@@ -75,7 +148,9 @@ class RegisterScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+            // Password TextField
             TextField(
+              controller: _passwordController,
               obscureText: true,
               decoration: InputDecoration(
                 hintText: 'buat password',
@@ -87,6 +162,7 @@ class RegisterScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+            // Confirm Password TextField
             TextField(
               obscureText: true,
               decoration: InputDecoration(
@@ -101,9 +177,7 @@ class RegisterScreen extends StatelessWidget {
             const SizedBox(height: 30),
             // Register Button
             ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/home');
-              },
+              onPressed: _isLoading ? null : _register,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -111,7 +185,11 @@ class RegisterScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text(
+              child: _isLoading
+                  ? const CircularProgressIndicator(
+                color: Colors.white,
+              )
+                  : const Text(
                 'Registrasi',
                 style: TextStyle(
                   fontSize: 16,
@@ -139,6 +217,7 @@ class RegisterScreen extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 20), // Extra spacing at the bottom
           ],
         ),
       ),

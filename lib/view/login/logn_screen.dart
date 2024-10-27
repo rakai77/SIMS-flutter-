@@ -158,12 +158,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             // Register Text
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('belum punya akun? '),
+                const Text('belum punya akun? '),
                 GestureDetector(
                   onTap: () {
                     Navigator.pushNamed(context, '/register');

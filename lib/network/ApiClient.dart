@@ -28,6 +28,21 @@ class ApiClient {
     }
   }
 
+  // Register API call
+  Future<Response> register(String email, String firstName, String lastName, String password) async {
+    try {
+      final response = await _dio.post('/registration', data: {
+        'email': email,
+        'first_name': firstName,
+        'last_name': lastName,
+        'password': password,
+      });
+      return response;
+    } on DioException catch (e) {
+      throw Exception(_handleDioError(e));
+    }
+  }
+
   // Handle Dio errors
   String _handleDioError(DioException error) {
     if (error.response != null) {
