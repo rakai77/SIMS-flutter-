@@ -15,16 +15,16 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final ApiService _apiService = ApiService();
   int _currentIndex = 0;
-
   Map<String, dynamic>? _profileData;
-
   List<BannerModel> _banners = [];
+  int _balance = 0;
 
   @override
   void initState() {
     super.initState();
     _fetchProfile();
     _fetchBanners();
+    _fetchBalance();
   }
 
   Future<void> _fetchProfile() async {
@@ -53,6 +53,19 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _fetchBalance() async {
+    try {
+      final response = await _apiService.getBalance();
+      if (response.statusCode == 200 && response.data['status'] == 0) {
+        setState(() {
+          _balance = response.data['data']['balance'];
+        });
+      }
+    } catch (e) {
+      print("Error fetching balance: $e");
+    }
+  }
+
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
@@ -65,8 +78,8 @@ class _HomeScreenState extends State<HomeScreen> {
       HomeContent(
         firstName: _profileData?['first_name'] ?? 'User',
         lastName: _profileData?['last_name'] ?? '',
-          banners: _banners
-
+        banners: _banners,
+        balance: _balance,
       ),
       const TopUpScreen(),
       const TransactionScreen(),
@@ -122,14 +135,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-
 class HomeContent extends StatelessWidget {
   final String firstName;
   final String lastName;
   final List<BannerModel> banners;
+  final int balance;
 
   const HomeContent(
-      {super.key, required this.firstName, required this.lastName, required this.banners});
+      {super.key,
+      required this.firstName,
+      required this.lastName,
+      required this.banners,
+      required this.balance});
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +160,7 @@ class HomeContent extends StatelessWidget {
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
-          const BalanceCard(),
+          BalanceCard(balance: balance),
           const SizedBox(height: 20),
 
           // Icons Grid
@@ -196,8 +213,23 @@ class HomeContent extends StatelessWidget {
   }
 }
 
-class BalanceCard extends StatelessWidget {
-  const BalanceCard({super.key});
+class BalanceCard extends StatefulWidget {
+  final int balance;
+
+  const BalanceCard({super.key, required this.balance});
+
+  @override
+  _BalanceCardState createState() => _BalanceCardState();
+}
+
+class _BalanceCardState extends State<BalanceCard> {
+  bool _isBalanceVisible = false;
+
+  void _toggleBalanceVisibility() {
+    setState(() {
+      _isBalanceVisible = !_isBalanceVisible;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -207,33 +239,38 @@ class BalanceCard extends StatelessWidget {
         color: Colors.redAccent,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Saldo anda',
             style: TextStyle(color: Colors.white, fontSize: 16),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Text(
-            'Rp •••••••••',
-            style: TextStyle(
+            _isBalanceVisible
+                ? 'Rp ${widget.balance.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ',')}'
+                : 'Rp •••••••••',
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              const Text(
                 'Lihat Saldo',
                 style: TextStyle(color: Colors.white70),
               ),
-              Icon(
-                Icons.visibility,
-                color: Colors.white70,
+              IconButton(
+                icon: Icon(
+                  _isBalanceVisible ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.white70,
+                ),
+                onPressed: _toggleBalanceVisibility,
               ),
             ],
           ),

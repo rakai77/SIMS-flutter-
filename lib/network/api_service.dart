@@ -46,4 +46,8 @@ class ApiService {
   Future<Response> getBanners() async {
     return await _dio.get('/banner');
   }
+
+  Future<Response> getBalance() async {
+    return await _dio.get('/balance');
+  }
 }
