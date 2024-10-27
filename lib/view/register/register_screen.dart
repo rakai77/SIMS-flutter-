@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../network/ApiClient.dart';
+import '../../network/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -13,7 +13,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _apiClient = ApiClient();
+  final _authService = AuthService();
   bool _isLoading = false;
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
@@ -24,7 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      final response = await _apiClient.register(
+      final response = await _authService.register(
         _emailController.text,
         _firstNameController.text,
         _lastNameController.text,
@@ -32,7 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (response.statusCode == 200) {
-        _showSuccessSnackbar("Register berhasil!");
+        _showSuccessSnackbar("Register successfully!");
         Navigator.pushReplacementNamed(context, '/login');
       }
     } catch (e) {

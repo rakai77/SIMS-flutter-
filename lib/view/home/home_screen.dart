@@ -14,10 +14,10 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    const HomeContent(),         // Home content (main screen)
-    const TopUpScreen(),         // Top Up screen
-    const TransactionScreen(),   // Transaction screen
-    const ProfileScreen(),       // Profile screen
+    const HomeContent(), // Home content (main screen)
+    const TopUpScreen(), // Top Up screen
+    const TransactionScreen(), // Transaction screen
+    const ProfileScreen(), // Profile screen
   ];
 
   void _onTabTapped(int index) {
@@ -29,28 +29,31 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _currentIndex == 0 // Only show AppBar when _currentIndex is 0 (Home)
+      appBar: _currentIndex ==
+              0 // Only show AppBar when _currentIndex is 0 (Home)
           ? AppBar(
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'SIMS PPOB',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+              elevation: 0,
+              automaticallyImplyLeading: false,
+              title: const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'SIMS PPOB',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  CircleAvatar(
+                    backgroundImage:
+                        NetworkImage('https://example.com/user-profile.jpg'),
+                    // Replace with user's profile picture URL
+                    radius: 20,
+                  ),
+                ],
               ),
-            ),
-            CircleAvatar(
-              backgroundImage: NetworkImage('https://example.com/user-profile.jpg'), // Replace with user's profile picture URL
-              radius: 20,
-            ),
-          ],
-        ),
-      )
+            )
           : null,
       body: IndexedStack(
         index: _currentIndex,
@@ -61,8 +64,10 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: _onTabTapped,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet), label: 'Top Up'),
-          BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Transaction'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.account_balance_wallet), label: 'Top Up'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.receipt), label: 'Transaction'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Akun'),
         ],
         selectedItemColor: Colors.red,
@@ -71,7 +76,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
 
 class HomeContent extends StatelessWidget {
   const HomeContent({super.key});
@@ -129,19 +133,22 @@ class HomeContent extends StatelessWidget {
                 PromoCard(
                   color: Colors.redAccent,
                   title: 'Saldo Gratis!',
-                  description: 'saldo SIMS PPOB gratis maksimal Rp25.000 untuk pengguna pertama',
+                  description:
+                      'saldo SIMS PPOB gratis maksimal Rp25.000 untuk pengguna pertama',
                 ),
                 SizedBox(width: 10),
                 PromoCard(
                   color: Colors.purpleAccent,
                   title: 'Diskon listrik!',
-                  description: 'diskon untuk setiap pembayaran listrik prabayar/pascabayar 10%',
+                  description:
+                      'diskon untuk setiap pembayaran listrik prabayar/pascabayar 10%',
                 ),
                 SizedBox(width: 10),
                 PromoCard(
                   color: Colors.orangeAccent,
                   title: 'Promo Spesial!',
-                  description: 'dapatkan diskon 20% untuk pembayaran PDAM bulan ini.',
+                  description:
+                      'dapatkan diskon 20% untuk pembayaran PDAM bulan ini.',
                 ),
               ],
             ),

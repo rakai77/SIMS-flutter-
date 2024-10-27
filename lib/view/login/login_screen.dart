@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../network/ApiClient.dart';
+
+import '../../network/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,7 +12,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _apiClient = ApiClient();
+  final _authService = AuthService();
   bool _isLoading = false;
   bool _isPasswordVisible = false;
 
@@ -21,13 +22,13 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final response = await _apiClient.login(
+      final response = await _authService.login(
         _emailController.text,
         _passwordController.text,
       );
       // Assuming a successful response contains a token, navigate to HomeScreen
       if (response.statusCode == 200) {
-        _showSuccessSnackBar("Login berhasil!");
+        _showSuccessSnackBar('Login successfully!');
         Navigator.pushNamed(context, '/home');
       }
     } catch (e) {
@@ -146,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 30),
             // Login Button
             ElevatedButton(
-              onPressed: _isLoading ? null : _login,
+              onPressed: _login,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 padding: const EdgeInsets.symmetric(vertical: 16),
